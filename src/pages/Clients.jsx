@@ -12,8 +12,8 @@ function GetClients({clients}) {
         <td>{data.name}</td>
         <td>{data.lastName}</td>
         <td>{data.phone}</td>
-        <td>{data.city}</td>
-        <td>{data.currency}</td>
+        <td>{data.city.name}</td>
+        <td>{data.currency.name}</td>
       </tr>
     )
   })

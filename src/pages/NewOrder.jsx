@@ -1,43 +1,80 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
-import { Form, HelpBlock, FormControl, Button, FormGroup, Radio, Checkbox, ControlLabel } from 'react-bootstrap';
+import { db } from '../firebase.js';
+import Spinner from '../components/Spinner.jsx'
+import Select from 'react-select';
+import 'react-select/dist/react-select.css';
+import { Button, Modal, ModalBody, ModalHeader, ModalFooter, Input } from 'mdbreact';
 import './NewOrder.css';
 
-function FieldGroup({ id, label, help, ...props }) {
-  return (
-    <FormGroup controlId={id}>
-      <ControlLabel>{label}</ControlLabel>
-      <FormControl {...props} />
-      {help && <HelpBlock>{help}</HelpBlock>}
-    </FormGroup>
-  );
-}
 
 class NewOrder extends Component {
+  constructor() {
+    super();
+    this.getClients = this.getClients.bind(this);
+    this.onClientSelect = this.onClientSelect.bind(this);
+    this.state = {
+      loading: true,
+      clients: null,
+      client: null,
+      currentClient: null
+    }
+  }
+  componentDidMount() {
+    db().collection('clients').get()
+    .then(clients => {
+      this.setState({
+        loading: false,
+        clients: clients
+      })
+    })
+  }
+  getClients() {
+    var clients = this.state.clients;
+    var clientOptions = [];
+    clients.forEach(clients => {
+      clientOptions.push({value: clients.id, label: clients.data().name});
+    });
+    return clientOptions;
+  }
+  onClientSelect(e) {
+    this.setState({
+      currentClient: e.value,
+      client: {
+        id: e.value,
+        name: e.label
+      }
+    });
+  }
   render() {
+    if(this.state.loading) {
+      return (
+        <Spinner />
+      )
+    }
     return (
-      <Form>
-        <FieldGroup
-          id="formControlsText"
-          type="text"
-          label="Клиент"
-          placeholder="Enter text"
+      <form>
+        <h3 className="h5 text-center mb-4">Новый заказ</h3>
+        <h4>Клиент</h4>
+        <Select
+          name="client"
+          value={this.state.currentClient}
+          onChange={this.onClientSelect}
+          options={this.getClients()}
+          searchable={true}
         />
-        <FieldGroup
-          id="formControlsEmail"
-          type="text"
-          label="Сотрудник"
-          placeholder="Enter email"
+        <br/>
+        <h4>Пользователь</h4>
+        <Select
+          name="client"
+          value={this.state.currentClient}
+          onChange={this.onClientSelect}
+          options={this.getClients()}
+          searchable={true}
         />
-        <FormGroup controlId="formControlsSelect">
-          <ControlLabel>Select</ControlLabel>
-          <FormControl componentClass="select" placeholder="select">
-            <option value="select">select</option>
-            <option value="other">...</option>
-          </FormControl>
-        </FormGroup>
-        <Button bsStyle='primary' type="submit">Создать заказ</Button>
-      </Form>
+        <Input label="Фамилия" onChange={this.onChange} name="lastName" icon="envelope" group type="text" validate error="wrong" success="right"/>
+        <Input label="Номер телефона" onChange={this.onChange} icon="lock" group type="number" validate/>
+      </form>
     );
   }
 }

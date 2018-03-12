@@ -2,44 +2,25 @@ import React, { Component } from 'react';
 import { Redirect } from 'react-router-dom';
 import { db } from '../firebase.js';
 import Spinner from '../components/Spinner.jsx'
-import { Form, HelpBlock, FormControl, FormGroup, ControlLabel } from 'react-bootstrap';
-import { Select, Button, Modal, ModalBody, ModalHeader, ModalFooter, Input } from 'mdbreact';
+import Select from 'react-select';
+import 'react-select/dist/react-select.css';
+import { Button, Modal, ModalBody, ModalHeader, ModalFooter, Input } from 'mdbreact';
 import './NewOrder.css';
-
-function FieldGroup({ id, label, help, ...props }) {
-  return (
-    <FormGroup controlId={id}>
-      <ControlLabel>{label}</ControlLabel>
-      <FormControl {...props} />
-      {help && <HelpBlock>{help}</HelpBlock>}
-    </FormGroup>
-  );
-}
-function Cities({cities}) {
-  var cityOptions = [];
-  cityOptions.push(<option key="">Выберите город</option>);
-  cities.forEach(city => {
-    cityOptions.push(<option key={city.id} value={city.data().name}>{city.data().name}</option>)
-  })
-  return cityOptions;
-}
-function Currencies({currencies}) {
-  var currencyOptions = [];
-  currencyOptions.push(<option key="">Выберите валюту</option>);
-  currencies.forEach(currency => {
-    currencyOptions.push(<option key={currency.id} value={currency.data().code}>{currency.data().code}</option>)
-  })
-  return currencyOptions;
-}
 class NewClient extends Component {
   constructor() {
     super();
     this.onSubmit = this.onSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
+    this.getCities = this.getCities.bind(this);
+    this.getCurrencies = this.getCurrencies.bind(this);
+    this.onCitySelect = this.onCitySelect.bind(this);
+    this.onCurrencySelect = this.onCurrencySelect.bind(this);
     this.state = {
       redirect: false,
       cities: null,
       phone: null,
+      currentCurrency: null,
+      currentCity: null,
       currencies: null,
       currency: null,
       city: null,
@@ -48,11 +29,45 @@ class NewClient extends Component {
       loading: true
     };
   };
+  getCurrencies() {
+    var currencies = this.state.currencies;
+    var currencyOptions = [];
+    currencies.forEach(currency => {
+      currencyOptions.push({value: currency.id, label: currency.data().name});
+    })
+    return currencyOptions;
+  }
+  getCities() {
+    var cities = this.state.cities;
+    var cityOptions = [];
+    cities.forEach(city => {
+      cityOptions.push({value: city.id, label: city.data().name});
+    })
+    return cityOptions;
+  }
   onChange(e) {
     this.setState({
       [e.target.name]: e.target.value
     })
   };
+  onCitySelect(e) {
+    this.setState({
+      currentCity: e.value,
+      city: {
+        id: e.value,
+        name: e.label
+      }
+    });
+  }
+  onCurrencySelect(e) {
+    this.setState({
+      currentCurrency: e.value,
+      currency: {
+        id: e.value,
+        name: e.label
+      }
+    })
+  }
   onSubmit(e) {
     e.preventDefault();
     db().collection('clients').add({
@@ -91,29 +106,44 @@ class NewClient extends Component {
       )
     }
     return (
+      <div>
         <Modal
           isOpen={this.props.showModal}
-          toggle={this.handleHide}
+          toggle={this.props.handleHide}
+          backdrop={"static"}
         >
-          <ModalHeader toggle={this.handleHide}>Modal title</ModalHeader>
+          <ModalHeader toggle={this.props.handleHide}>Клиент</ModalHeader>
           <ModalBody>
+
             <form>
-              <p className="h5 text-center mb-4">Sign up</p>
-              <Input label="Имя" name="name" icon="user" group type="text" validate error="wrong" success="right"/>
-              <Input label="Фамилия" name="lastName" icon="envelope" group type="text" validate error="wrong" success="right"/>
-              <Input label="Номер телефона" icon="lock" group type="number" validate/>
-              <Input label="Номер телефона" icon="lock" group type="text" validate/>
-              <div className="text-center">
-                  <Button color="deep-orange">Sign up</Button>
-              </div>
+              <p className="h5 text-center mb-4">Создать клиента</p>
+              <Input label="Имя" onChange={this.onChange} name="name" icon="user" group type="text" validate error="wrong" success="right"/>
+              <Input label="Фамилия" onChange={this.onChange} name="lastName" icon="envelope" group type="text" validate error="wrong" success="right"/>
+              <Input label="Номер телефона" onChange={this.onChange} icon="lock" group type="text" validate/>
+              <h3>Город</h3>
+              <Select
+                name="city"
+                value={this.state.currentCity}
+                onChange={this.onCitySelect}
+                options={this.getCities()}
+              />
+              <h3>Валюта</h3>
+              <Select
+                name="currency"
+                value={this.state.currentCurrency}
+                onChange={this.onCurrencySelect}
+                options={this.getCurrencies()}
+              />
+
           </form>
 
           </ModalBody>
           <ModalFooter>
             <Button onClick={this.props.handleHide}>Close</Button>
-            <Button onClick={this.onSubmit} type="submit" bsStyle="primary">Создать клиента</Button>
+            <Button onClick={this.onSubmit} type="submit" bsstyle="primary">Создать клиента</Button>
           </ModalFooter>
         </Modal>
+      </div>
     );
   }
 }
