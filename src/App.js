@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import {BrowserRouter as Router, Route, Redirect } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import NewOrder from './pages/NewOrder.jsx'
+import Order from './pages/Order.jsx';
 import NewClient from './pages/NewClient.jsx'
 import About from './pages/About.jsx';
 import News from './pages/News.jsx';
@@ -56,8 +57,9 @@ class App extends Component {
           <ProtectedRoute authorized={this.state.authorized} path='/news' component={News} />
           <ProtectedRoute authorized={this.state.authorized} path='/logout' component={Logout} />
           <ProtectedRoute authorized={this.state.authorized} path='/clients' component={Clients} />
-          <ProtectedRoute authorized={this.state.authorized} path='/order/new' component={NewOrder} />
+          <ProtectedRoute authorized={this.state.authorized} path='/order-new' component={NewOrder} />
           <ProtectedRoute authorized={this.state.authorized} path='/client/new' component={NewClient} />
+          <ProtectedRoute authorized={this.state.authorized} path='/order/:orderId' component={Order} />
         </div>
       </Router>
     );
