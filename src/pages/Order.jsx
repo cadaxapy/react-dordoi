@@ -11,6 +11,7 @@ import './NewOrder.css';
 class NewOrder extends Component {
   constructor() {
     super();
+    this.updateOrder = this.updateOrder.bind(this);
     this.handleHide = this.handleHide.bind(this);
     this.getProducts = this.getProducts.bind(this);
     this.state = {
@@ -19,7 +20,12 @@ class NewOrder extends Component {
       showProduct: false,
       products: null,
       client: null,
-      order: null
+      order: null,
+      carriers: null,
+      selectedCarrier: {
+        id: null,
+        name: null
+      }
     }
   }
   handleHide() {
@@ -30,12 +36,17 @@ class NewOrder extends Component {
     var productRows = [];
     products.forEach(product => {
       var data = product.data();
+      var productRef = db().collection('orders').doc(this.state.order.id)
+      .collection('products').doc(product.id);
       productRows.push(
-        <tr>
+        <tr key={product.id}>
           <td>{data.name}</td>
           <td>{data.amount}</td>
           <td>{data.price}</td>
           <td>{data.sum}</td>
+          <td><a href="#" className='btn btn-warning .btn-xs' onClick={() => {
+            productRef.delete();
+          }}>Удалить</a></td>
         </tr>
       );
     })
@@ -47,11 +58,13 @@ class NewOrder extends Component {
     orderDoc.get().then(order => {
       Promise.all([
         db().collection('clients').doc(order.data().client.id).get(),
-        db().collection('users').doc(order.data().user.id).get()
-      ]).then(([client, user]) => {
+        db().collection('users').doc(order.data().user.id).get(),
+        db().collection('carriers').get()
+      ]).then(([client, user, carriers]) => {
         this.setState({
           client: client,
           user: user,
+          carriers: carriers,
           order: order,
           loading: false
         });
@@ -64,6 +77,25 @@ class NewOrder extends Component {
       });
     });
   };
+  getCarriers() {
+    var carriers = this.state.carriers;
+    var carrierOptions = [];
+    carriers.forEach(carrier => {
+      carrierOptions.push({value: carrier.id, label: carrier.data().name});
+    });
+    return carrierOptions;
+  }
+  onCarrierSelect(e) {
+    this.setState({
+      selectedCarrier: {
+        id: e.value,
+        name: e.label
+      }
+    });
+  }
+  updateOrder() {
+    console.log('test')
+  }
   render() {
     if(this.state.loading) {
       return (
@@ -102,6 +134,23 @@ class NewOrder extends Component {
                 <td>{order.data().commission}</td>
               </tr>
               <tr>
+                <td>Перевозчики</td>
+                <td><Select
+                  name="client"
+                  placeholder="Выберите перевозчика"
+                  value={this.state.selectedCarrier.id}
+                  onChange={this.onCarrierSelect}
+                  options={this.getCarriers()}
+                  searchable={true}
+                /></td>
+              </tr>
+              <tr>
+                <td>Комиссия за перевод</td>
+                <td>
+                  <Input label="Название" name="productName" group type="text" validate error="wrong" success="right"/>
+                </td>
+              </tr>
+              <tr>
                 <td>Товары</td>
                 <td>
                   <Button onClick={(e) => {this.setState({showProduct: true})}} color='primary'>Показать</Button>
@@ -109,7 +158,7 @@ class NewOrder extends Component {
               </tr>
             </tbody>
           </Table>
-          <Button bsstyle="primary">Создать Заказ</Button>
+          <Button onClick={this.updateOrder} bsstyle="primary">Создать Заказ</Button>
         </div>
       </div>
     );

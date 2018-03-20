@@ -4,7 +4,7 @@ import { db } from '../firebase.js';
 import Spinner from '../components/Spinner.jsx'
 import Select from 'react-select';
 import 'react-select/dist/react-select.css';
-import { Table, FormControl } from 'react-bootstrap';
+import { Table, FormControl, ControlLabel } from 'react-bootstrap';
 import './ProductModal.css';
 import { Popover, PopoverBody, PopoverHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, FormInline, Input} from 'mdbreact';
 function NewProductPopover({productPriceSum, onSubmit, onChange, showProductForm, handleHide, saveProduct}) {
@@ -35,13 +35,10 @@ function NewProductPopover({productPriceSum, onSubmit, onChange, showProductForm
             </div>
             <div className="col">
                 <div className="md-form mt-0">
-                <FormControl
-                   type="number"
-                   value={productPriceSum}
-                   placeholder="Enter text"
-                   onChange={onChange}
-                   disabled
-                 />
+                  <div className="md-form form-group">
+                  <input disabled value={productPriceSum} type="number" name="productPrice" className="form-control validate" />
+                  <label className="active" data-error="wrong" data-success="right">Сумма</label>
+                  </div>
                 </div>
             </div>
         </div>
@@ -57,6 +54,7 @@ class ProductModal extends Component {
     this.showProductForm = this.showProductForm.bind(this);
     this.onProductValueChange = this.onProductValueChange.bind(this);
     this.onProductValueSave = this.onProductValueSave.bind(this);
+    this.getProducts = this.getProducts.bind(this);
     this.onProductValueChange = this.onProductValueChange.bind(this);
     this.state = {
       showProductForm: false,
@@ -71,17 +69,34 @@ class ProductModal extends Component {
       showProductForm: !this.state.showProductForm
     })
   };
+  getProducts() {
+    const products = this.props.products;
+    var productRows = [];
+    for(let i in products) {
+      var data = products[i];
+      productRows.push(
+        <tr key={i}>
+          <td>{data.name}</td>
+          <td>{data.amount}</td>
+          <td>{data.price}</td>
+          <td>{data.sum}</td>
+          <td><a href="#" className='btn btn-warning .btn-xs' onClick={() => {
+            this.props.deleteProduct(i);
+          }}>Удалить</a></td>
+        </tr>
+      );
+    }
+    return productRows;
+  }
   onProductValueSave(e) {
     e.preventDefault();
-    db().collection('orders').doc(this.props.order.id)
-    .collection('products').add({
+    this.showProductForm();
+    this.props.addProduct({
       name: this.state.productName,
       amount: this.state.productAmount,
       price: this.state.productPrice,
       sum: this.state.productPriceSum
-    }).then(() => {
-      this.showProductForm();
-    })
+    });
   }
   onProductValueChange(e) {
     if(e.target.name == 'productAmount') {
@@ -101,11 +116,16 @@ class ProductModal extends Component {
   render() {
     const showModal = this.props.showModal;
     const handleHide = this.props.handleHide;
-    const products = this.props.getProducts();
     return (
       <div className='container'>
-        <NewProductPopover productPriceSum={this.state.productPriceSum} onSubmit={this.onProductValueSave} onChange={this.onProductValueChange} showProductForm={this.state.showProductForm} handleHide={this.showProductForm} />
+        <NewProductPopover
+          productPriceSum={this.state.productPriceSum}
+          onSubmit={this.onProductValueSave}
+          onChange={this.onProductValueChange}
+          showProductForm={this.state.showProductForm}
+          handleHide={this.showProductForm} />
         <Modal
+          size='lg'
           isOpen={showModal}
           toggle={handleHide}
           backdrop={"static"}
@@ -119,16 +139,16 @@ class ProductModal extends Component {
                   <th>Количество</th>
                   <th>Цена</th>
                   <th>Сумма</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
-                {products}
+                {this.getProducts()}
               </tbody>
             </Table>
           </ModalBody>
           <ModalFooter>
-            <Button onClick={(e) => {this.setState({showProductForm: true})}} bsstyle="primary">Создать клиента</Button>
-            <Button type="submit" bsstyle="primary">Создать клиента</Button>
+            <Button onClick={(e) => {this.setState({showProductForm: true})}} bsstyle="primary">Добавить новый товар</Button>
           </ModalFooter>
         </Modal>
       </div>
