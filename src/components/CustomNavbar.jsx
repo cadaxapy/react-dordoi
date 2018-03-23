@@ -41,7 +41,7 @@ class CustomNavbar extends Component {
               <NavLink className="nav-link" to="/pricing">Пользователи</NavLink>
             </NavItem>
             <NavItem>
-              <NavLink className="nav-link" to="/opinions">Переводы</NavLink>
+              <NavLink className="nav-link" to="/transfers">Переводы</NavLink>
             </NavItem>
           </NavbarNav>
           <NavbarNav>

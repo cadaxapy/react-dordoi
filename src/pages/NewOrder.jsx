@@ -45,7 +45,8 @@ class NewOrder extends Component {
       users: null,
       user: {
         id: null,
-        name: null
+        name: null,
+        cityName: null
       }
     }
   }
@@ -69,11 +70,7 @@ class NewOrder extends Component {
     db().collection('orders').add({
       client: this.state.client,
       user: this.state.user,
-      carrier: this.state.carrier,
-      carrierCommission: this.state.carrierCommission,
-      commission: this.state.commission,
-      products: this.state.products,
-      orderPriceSum: this.state.orderPriceSum,
+      status: 0,
       createdAt: db.FieldValue.serverTimestamp()
     }).then((orderRef) => {
       this.setState({
@@ -107,7 +104,7 @@ class NewOrder extends Component {
     var clients = this.state.clients;
     var clientOptions = [];
     clients.forEach(client => {
-      clientOptions.push({value: client.id, label: client.data().name});
+      clientOptions.push({cityName: client.data().city.name, value: client.id, label: client.data().name});
     });
     return clientOptions;
   }
@@ -123,7 +120,7 @@ class NewOrder extends Component {
     this.setState({
       carrier: {
         id: e.value,
-        name: e.label
+        name: e.label,
       }
     });
   }
@@ -154,10 +151,18 @@ class NewOrder extends Component {
     }
   }
   onClientSelect(e) {
+    var selectedClientCity = '';
+    this.state.clients.forEach(client => {
+      if(client.id == e.value) {
+        selectedClientCity = client.data().city.name;
+        return true;
+      }
+    })
     this.setState({
       client: {
         id: e.value,
-        name: e.label
+        name: e.label,
+        cityName: selectedClientCity
       }
     });
   }
@@ -187,7 +192,6 @@ class NewOrder extends Component {
     }
     return (
       <div>
-        <ProductModal handleHide={this.handleProductModal} deleteProduct={this.deleteProduct} addProduct={this.addProduct} products={this.state.products} showModal={this.state.showProductModal} />
         <form>
           <h3 className="h5 text-center mb-4">Новый заказ</h3>
           <h4>Клиент</h4>
@@ -207,27 +211,6 @@ class NewOrder extends Component {
             options={this.getUsers()}
             searchable={true}
           />
-          <br/>
-          <h4>Перевозчик</h4>
-          <Select
-            name="carrier"
-            placeholder="Выберите перевозчика"
-            value={this.state.carrier.id}
-            onChange={this.onCarrierSelect}
-            options={this.getCarriers()}
-            searchable={true}
-          />
-          <br/>
-          {this.state.carrier.id != null ?
-              <Input label="Комиссия за перевозку" onChange={this.onOrderChange} name="carrierCommission" group type="number" validate error="wrong" success="right"/>
-              : ''
-          }
-          <h4>Комиссия за работу</h4>
-          <Input onChange={this.onOrderChange} name="commission" group type="number" validate error="wrong" success="right"/>
-          <h4>Общая сумма</h4>
-          <input disabled type="number" value={this.state.orderPriceSum} className="form-control form-control-sm"/>
-          <h4>Товары</h4>
-          <Button onClick={this.handleProductModal} color='primary'>Показать</Button>
           <br/>
           <Button onClick={this.onSubmit} type="submit" bsstyle="primary">Создать Заказ</Button>
         </form>

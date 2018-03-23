@@ -4,6 +4,7 @@ import { db } from '../firebase.js';
 import Spinner from '../components/Spinner.jsx'
 import Select from 'react-select';
 import { Table } from 'react-bootstrap';
+import OrderStatus from '../components/OrderStatus.jsx';
 import ProductsModal from '../components/ProductModal.jsx';
 import 'react-select/dist/react-select.css';
 import { Button, Modal, ModalBody, ModalHeader, ModalFooter, Input } from 'mdbreact';
@@ -14,11 +15,18 @@ class NewOrder extends Component {
     this.updateOrder = this.updateOrder.bind(this);
     this.handleHide = this.handleHide.bind(this);
     this.getProducts = this.getProducts.bind(this);
+    this.onOrderChange = this.onOrderChange.bind(this);
+    this.onCarrierSelect = this.onCarrierSelect.bind(this);
+    this.getOrderPriceSum = this.getOrderPriceSum.bind(this);
+    this.getInputCarrier = this.getInputCarrier.bind(this);
     this.state = {
       loading: true,
       user: null,
       showProduct: false,
       products: null,
+      commission: 0,
+      carrierCommission: 0,
+      sumOfProducts: 0,
       client: null,
       order: null,
       carriers: null,
@@ -44,13 +52,19 @@ class NewOrder extends Component {
           <td>{data.amount}</td>
           <td>{data.price}</td>
           <td>{data.sum}</td>
-          <td><a href="#" className='btn btn-warning .btn-xs' onClick={() => {
-            productRef.delete();
-          }}>Удалить</a></td>
+          {
+            this.state.order.data().status == 0 ?
+            <td><a href="#" className='btn btn-warning .btn-xs' onClick={() => {
+              productRef.delete();
+            }}>Удалить</a></td> : ''
+          }
         </tr>
       );
     })
     return productRows;
+  }
+  getOrderPriceSum() {
+    return parseInt(this.state.commission) + parseInt(this.state.carrierCommission) + this.state.sumOfProducts;
   }
   componentDidMount() {
     const { match: { params } } = this.props;
@@ -72,7 +86,12 @@ class NewOrder extends Component {
     });
     orderDoc.collection('products')
     .onSnapshot(products => {
+      var sumOfProducts = 0;
+      products.forEach(product => {
+        sumOfProducts += product.data().sum;
+      });
       this.setState({
+        sumOfProducts: sumOfProducts,
         products: products
       });
     });
@@ -93,8 +112,30 @@ class NewOrder extends Component {
       }
     });
   }
-  updateOrder() {
-    console.log('test')
+  onOrderChange(e) {
+    console.log(e.target.name);
+    this.setState({
+      [e.target.name]: e.target.value
+    })
+  }
+  getInputCarrier() {
+    if(this.state.order.data().status == 0) {
+      return (
+        <Select name="client" placeholder="Выберите перевозчика" value={this.state.selectedCarrier.id}  onChange={this.onCarrierSelect} options={this.getCarriers()}  searchable={true} />
+      );
+    }
+    return;
+  }
+  updateOrder(e) {
+    e.preventDefault();
+    db().collection('orders').doc(this.state.order.id).update({
+      status: 1,
+      commission: parseInt(this.state.commission),
+      carrier: this.state.selectedCarrier,
+      carrierCommission: parseInt(this.state.carrierCommission),
+      orderPriceSum: this.getOrderPriceSum(),
+      createdAt: db.FieldValue.serverTimestamp()
+    });
   }
   render() {
     if(this.state.loading) {
@@ -119,7 +160,7 @@ class NewOrder extends Component {
             <tbody>
               <tr>
                 <td>Статус</td>
-                <td>{order.data().status}</td>
+                <td><OrderStatus status={order.data().status}/></td>
               </tr>
               <tr>
                 <td>Клиент</td>
@@ -131,23 +172,36 @@ class NewOrder extends Component {
               </tr>
               <tr>
                 <td>Комиссия</td>
-                <td>{order.data().commission}</td>
+                <td>
+                  {order.data().status == 0
+                    ? <Input pattern="[0-9]*" type="text" inputmode="numeric" onChange={this.onOrderChange} name="commission" group validate error="wrong" success="right"/>
+                    : order.data().commission
+                  }
+                </td>
               </tr>
               <tr>
                 <td>Перевозчики</td>
-                <td><Select
-                  name="client"
-                  placeholder="Выберите перевозчика"
-                  value={this.state.selectedCarrier.id}
-                  onChange={this.onCarrierSelect}
-                  options={this.getCarriers()}
-                  searchable={true}
-                /></td>
-              </tr>
-              <tr>
-                <td>Комиссия за перевод</td>
                 <td>
-                  <Input label="Название" name="productName" group type="text" validate error="wrong" success="right"/>
+                  {this.getInputCarrier()}
+                </td>
+              </tr>
+              {this.state.selectedCarrier.id != null ?
+                <tr>
+                  <td>Комиссия за перевод</td>
+                  <td>
+                    <Input pattern="[0-9]*" onChange={this.onOrderChange} name="carrierCommission" group type="number" validate error="wrong" success="right"/>
+                  </td>
+                </tr> : ''
+              }
+
+              <tr>
+                <td>Общая сумма</td>
+                <td>
+                  {
+                    order.data().status == 0
+                    ?<input disabled onChange={this.onOrderChange} type="number" value={this.getOrderPriceSum()} className="form-control form-control-sm"/>
+                    :order.data().orderPriceSum
+                  }
                 </td>
               </tr>
               <tr>
@@ -158,7 +212,12 @@ class NewOrder extends Component {
               </tr>
             </tbody>
           </Table>
-          <Button onClick={this.updateOrder} bsstyle="primary">Создать Заказ</Button>
+          {
+            order.data().status == 0
+            ? <Button onClick={this.updateOrder} bsstyle="primary">Создать Заказ</Button>
+            : ''
+          }
+
         </div>
       </div>
     );

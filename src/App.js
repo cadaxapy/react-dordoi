@@ -8,6 +8,7 @@ import NewClient from './pages/NewClient.jsx'
 import About from './pages/About.jsx';
 import News from './pages/News.jsx';
 import Clients from './pages/Clients.jsx';
+import Transfers from './pages/Transfers.jsx';
 import Logout from './components/Logout.jsx';
 import Spinner from './components/Spinner.jsx';
 import Auth from './pages/Auth.jsx';
@@ -60,6 +61,8 @@ class App extends Component {
           <ProtectedRoute authorized={this.state.authorized} path='/order-new' component={NewOrder} />
           <ProtectedRoute authorized={this.state.authorized} path='/client/new' component={NewClient} />
           <ProtectedRoute authorized={this.state.authorized} path='/order/:orderId' component={Order} />
+          <ProtectedRoute authorized={this.state.authorized} path='/transfers' component={Transfers} />
+
         </div>
       </Router>
     );

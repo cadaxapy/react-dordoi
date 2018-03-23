@@ -7,7 +7,7 @@ import 'react-select/dist/react-select.css';
 import { Table, FormControl, ControlLabel } from 'react-bootstrap';
 import './ProductModal.css';
 import { Popover, PopoverBody, PopoverHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, FormInline, Input} from 'mdbreact';
-function NewProductPopover({productPriceSum, onSubmit, onChange, showProductForm, handleHide, saveProduct}) {
+function NewProductPopover({productAmount, onSubmit, onChange, showProductForm, handleHide, saveProduct}) {
   return (
     <Modal
       isOpen={showProductForm}
@@ -25,7 +25,7 @@ function NewProductPopover({productPriceSum, onSubmit, onChange, showProductForm
             </div>
             <div className="col">
                 <div className="md-form mt-0">
-                   <Input onChange={onChange} label="Количество" name="productAmount" group type="number" validate error="wrong" success="right"/>
+                   <Input onChange={onChange} label="Количество" name="productQuantity" group type="number" validate error="wrong" success="right"/>
                 </div>
             </div>
             <div className="col">
@@ -36,7 +36,7 @@ function NewProductPopover({productPriceSum, onSubmit, onChange, showProductForm
             <div className="col">
                 <div className="md-form mt-0">
                   <div className="md-form form-group">
-                  <input disabled value={productPriceSum} type="number" name="productPrice" className="form-control validate" />
+                  <input disabled value={productAmount} type="number" name="productPrice" className="form-control validate" />
                   <label className="active" data-error="wrong" data-success="right">Сумма</label>
                   </div>
                 </div>
@@ -59,9 +59,9 @@ class ProductModal extends Component {
     this.state = {
       showProductForm: false,
       productName: null,
-      productAmount: null,
+      productQuantity: null,
       productPrice: null,
-      productPriceSum: 0
+      productAmount: 0
     };
   };
   showProductForm() {
@@ -70,6 +70,7 @@ class ProductModal extends Component {
     })
   };
   getProducts() {
+    console.log(this.props.order.data().status);
     const products = this.props.products;
     var productRows = [];
     for(let i in products) {
@@ -80,9 +81,12 @@ class ProductModal extends Component {
           <td>{data.amount}</td>
           <td>{data.price}</td>
           <td>{data.sum}</td>
-          <td><a href="#" className='btn btn-warning .btn-xs' onClick={() => {
-            this.props.deleteProduct(i);
-          }}>Удалить</a></td>
+          {
+            this.props.order.data().status == 0
+            ? <td><a href="#" className='btn btn-warning .btn-xs' onClick={() => {
+              this.props.deleteProduct(i);
+            }}>Удалить</a></td> : ''
+          }
         </tr>
       );
     }
@@ -91,22 +95,23 @@ class ProductModal extends Component {
   onProductValueSave(e) {
     e.preventDefault();
     this.showProductForm();
-    this.props.addProduct({
+    db().collection('orders').doc(this.props.order.id)
+    .collection('products').add({
       name: this.state.productName,
-      amount: this.state.productAmount,
-      price: this.state.productPrice,
-      sum: this.state.productPriceSum
+      quantity: parseInt(this.state.productQuantity),
+      price: parseInt(this.state.productPrice),
+      amount: parseInt(this.state.productAmount)
     });
   }
   onProductValueChange(e) {
-    if(e.target.name == 'productAmount') {
+    if(e.target.name == 'productQuantity') {
       this.setState({
-        productPriceSum: e.target.value * this.state.productPrice
+        productAmount: e.target.value * this.state.productPrice
       })
     }
     if(e.target.name == 'productPrice') {
       this.setState({
-        productPriceSum: e.target.value * this.state.productAmount
+        productAmount: e.target.value * this.state.productQuantity
       })
     }
     this.setState({
@@ -116,10 +121,11 @@ class ProductModal extends Component {
   render() {
     const showModal = this.props.showModal;
     const handleHide = this.props.handleHide;
+    const products = this.props.getProducts;
     return (
       <div className='container'>
         <NewProductPopover
-          productPriceSum={this.state.productPriceSum}
+          productAmount={this.state.productAmount}
           onSubmit={this.onProductValueSave}
           onChange={this.onProductValueChange}
           showProductForm={this.state.showProductForm}
@@ -139,17 +145,24 @@ class ProductModal extends Component {
                   <th>Количество</th>
                   <th>Цена</th>
                   <th>Сумма</th>
-                  <th></th>
+                  {
+                    this.props.order.data().status == 0
+                    ? <th></th> : ''
+                  }
+
                 </tr>
               </thead>
               <tbody>
-                {this.getProducts()}
+                {this.props.getProducts()}
               </tbody>
             </Table>
           </ModalBody>
-          <ModalFooter>
-            <Button onClick={(e) => {this.setState({showProductForm: true})}} bsstyle="primary">Добавить новый товар</Button>
-          </ModalFooter>
+          {
+            this.props.order.data().status == 0 ?
+            <ModalFooter>
+              <Button onClick={(e) => {this.setState({showProductForm: true})}} bsstyle="primary">Добавить новый товар</Button>
+            </ModalFooter> : ''
+          }
         </Modal>
       </div>
     );
