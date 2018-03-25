@@ -24,6 +24,7 @@ class NewOrder extends Component {
       user: null,
       showProduct: false,
       products: null,
+      validate: true,
       commission: 0,
       carrierCommission: 0,
       sumOfProducts: 0,
@@ -51,7 +52,7 @@ class NewOrder extends Component {
           <td>{data.name}</td>
           <td>{data.amount}</td>
           <td>{data.price}</td>
-          <td>{data.sum}</td>
+          <td>{data.amount}</td>
           {
             this.state.order.data().status == 0 ?
             <td><a href="#" className='btn btn-warning .btn-xs' onClick={() => {
@@ -64,6 +65,7 @@ class NewOrder extends Component {
     return productRows;
   }
   getOrderPriceSum() {
+    console.log(this.state.sumOfProducts);
     return parseInt(this.state.commission) + parseInt(this.state.carrierCommission) + this.state.sumOfProducts;
   }
   componentDidMount() {
@@ -88,7 +90,7 @@ class NewOrder extends Component {
     .onSnapshot(products => {
       var sumOfProducts = 0;
       products.forEach(product => {
-        sumOfProducts += product.data().sum;
+        sumOfProducts += product.data().amount;
       });
       this.setState({
         sumOfProducts: sumOfProducts,
@@ -113,9 +115,12 @@ class NewOrder extends Component {
     });
   }
   onOrderChange(e) {
-    console.log(e.target.name);
+    var value = e.target.value
+    if(value == '') {
+      value = 0;
+    }
     this.setState({
-      [e.target.name]: e.target.value
+      [e.target.name]: value
     })
   }
   getInputCarrier() {
@@ -128,13 +133,32 @@ class NewOrder extends Component {
   }
   updateOrder(e) {
     e.preventDefault();
+    const commission = parseInt(this.state.commission);
+    const carrierCommission = parseInt(this.state.carrierCommission);
+    if(commission <= 0 || carrierCommission <= 0 || !this.state.selectedCarrier.id) {
+      return this.setState({
+        validate: false
+      });
+    }
+    var orderPriceSum = this.getOrderPriceSum();
     db().collection('orders').doc(this.state.order.id).update({
       status: 1,
       commission: parseInt(this.state.commission),
       carrier: this.state.selectedCarrier,
       carrierCommission: parseInt(this.state.carrierCommission),
-      orderPriceSum: this.getOrderPriceSum(),
+      orderPriceSum: orderPriceSum,
       createdAt: db.FieldValue.serverTimestamp()
+    }).then(() => {
+      var clientRef = db().collection('clients').doc(this.state.client.id);
+      db().runTransaction(transaction => {
+        return transaction.get(clientRef)
+        .then(clientDoc => {
+          var newBudget = clientDoc.data().budget - orderPriceSum;
+          return transaction.update(clientRef, {budget: newBudget});
+        });
+      }).catch(e => {
+        console.log(e);
+      });
     });
   }
   render() {
@@ -167,6 +191,10 @@ class NewOrder extends Component {
                 <td>{clientData.name + ', ' + clientData.city.name}</td>
               </tr>
               <tr>
+                <td>Бюджет клиента</td>
+                <td>{clientData.budget - this.getOrderPriceSum()}</td>
+              </tr>
+              <tr>
                 <td>Сотрудник</td>
                 <td>{userData.name +', '+ userData.phone}</td>
               </tr>
@@ -174,7 +202,7 @@ class NewOrder extends Component {
                 <td>Комиссия</td>
                 <td>
                   {order.data().status == 0
-                    ? <Input pattern="[0-9]*" type="text" inputmode="numeric" onChange={this.onOrderChange} name="commission" group validate error="wrong" success="right"/>
+                    ? <Input type="number" inputmode="numeric" onChange={this.onOrderChange} name="commission" group validate error="wrong" success="right"/>
                     : order.data().commission
                   }
                 </td>
@@ -189,7 +217,7 @@ class NewOrder extends Component {
                 <tr>
                   <td>Комиссия за перевод</td>
                   <td>
-                    <Input pattern="[0-9]*" onChange={this.onOrderChange} name="carrierCommission" group type="number" validate error="wrong" success="right"/>
+                    <Input onChange={this.onOrderChange} name="carrierCommission" group type="number" validate error="wrong" success="right"/>
                   </td>
                 </tr> : ''
               }
@@ -212,6 +240,10 @@ class NewOrder extends Component {
               </tr>
             </tbody>
           </Table>
+          {!this.state.validate
+            ? <p style={{color: 'red'}}>ошибка валидации</p>
+            : ''
+          }
           {
             order.data().status == 0
             ? <Button onClick={this.updateOrder} bsstyle="primary">Создать Заказ</Button>

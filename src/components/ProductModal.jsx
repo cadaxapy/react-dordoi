@@ -7,7 +7,7 @@ import 'react-select/dist/react-select.css';
 import { Table, FormControl, ControlLabel } from 'react-bootstrap';
 import './ProductModal.css';
 import { Popover, PopoverBody, PopoverHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, FormInline, Input} from 'mdbreact';
-function NewProductPopover({productAmount, onSubmit, onChange, showProductForm, handleHide, saveProduct}) {
+function NewProductPopover({validate, productAmount, onSubmit, onChange, showProductForm, handleHide, saveProduct}) {
   return (
     <Modal
       isOpen={showProductForm}
@@ -43,6 +43,10 @@ function NewProductPopover({productAmount, onSubmit, onChange, showProductForm, 
             </div>
         </div>
         <Button onClick={onSubmit} type="submit" bsstyle="primary">Добавить</Button>
+        {!validate
+          ? <p style={{color: 'red'}}>ошибка валидации</p>
+          : ''
+        }
       </form>
     </ModalBody>
   </Modal>
@@ -61,6 +65,7 @@ class ProductModal extends Component {
       productName: null,
       productQuantity: null,
       productPrice: null,
+      validate: true,
       productAmount: 0
     };
   };
@@ -70,7 +75,6 @@ class ProductModal extends Component {
     })
   };
   getProducts() {
-    console.log(this.props.order.data().status);
     const products = this.props.products;
     var productRows = [];
     for(let i in products) {
@@ -78,9 +82,9 @@ class ProductModal extends Component {
       productRows.push(
         <tr key={i}>
           <td>{data.name}</td>
-          <td>{data.amount}</td>
+          <td>{data.quantity}</td>
           <td>{data.price}</td>
-          <td>{data.sum}</td>
+          <td>{data.amount}</td>
           {
             this.props.order.data().status == 0
             ? <td><a href="#" className='btn btn-warning .btn-xs' onClick={() => {
@@ -94,13 +98,21 @@ class ProductModal extends Component {
   }
   onProductValueSave(e) {
     e.preventDefault();
+    const quantity = parseInt(this.state.productQuantity);
+    const price = parseInt(this.state.productPrice);
+    const amount = parseInt(this.state.productAmount);
+    if(!this.state.productName || quantity <= 0 || price <= 0) {
+      return this.setState({
+        validate: false
+      })
+    }
     this.showProductForm();
     db().collection('orders').doc(this.props.order.id)
     .collection('products').add({
       name: this.state.productName,
-      quantity: parseInt(this.state.productQuantity),
-      price: parseInt(this.state.productPrice),
-      amount: parseInt(this.state.productAmount)
+      quantity: quantity,
+      price: price,
+      amount: amount
     });
   }
   onProductValueChange(e) {
@@ -128,6 +140,7 @@ class ProductModal extends Component {
           productAmount={this.state.productAmount}
           onSubmit={this.onProductValueSave}
           onChange={this.onProductValueChange}
+          validate={this.state.validate}
           showProductForm={this.state.showProductForm}
           handleHide={this.showProductForm} />
         <Modal

@@ -25,6 +25,7 @@ class NewClient extends Component {
       currency: null,
       city: null,
       name: null,
+      validate: true,
       lastName: null,
       loading: true
     };
@@ -70,10 +71,21 @@ class NewClient extends Component {
   }
   onSubmit(e) {
     e.preventDefault();
+    console.log(this.state.name);
+    console.log(this.state.lastName);
+    console.log(this.state.currency);
+    console.log(this.state.phone);
+    console.log(this.state.city);
+    if(!this.state.name || !this.state.lastName || !this.state.currency || !this.state.phone || !this.state.city) {
+      return this.setState({
+        validate: false
+      })
+    }
     db().collection('clients').add({
       name: this.state.name,
       lastName: this.state.lastName,
       currency: this.state.currency,
+      budget: 0,
       phone: this.state.phone,
       city: this.state.city,
       createdAt: db.FieldValue.serverTimestamp()
@@ -119,7 +131,7 @@ class NewClient extends Component {
               <p className="h5 text-center mb-4">Создать клиента</p>
               <Input label="Имя" onChange={this.onChange} name="name" icon="user" group type="text" validate error="wrong" success="right"/>
               <Input label="Фамилия" onChange={this.onChange} name="lastName" icon="envelope" group type="text" validate error="wrong" success="right"/>
-              <Input label="Номер телефона" onChange={this.onChange} icon="lock" group type="text" validate/>
+              <Input label="Номер телефона" onChange={this.onChange} name="phone" group type="text" validate/>
               <h3>Город</h3>
               <Select
                 name="city"
@@ -139,6 +151,10 @@ class NewClient extends Component {
 
           </ModalBody>
           <ModalFooter>
+            {!this.state.validate
+              ? <p style={{color: 'red'}}>ошибка валидации</p>
+              : ''
+            }
             <Button onClick={this.props.handleHide}>Close</Button>
             <Button onClick={this.onSubmit} type="submit" bsstyle="primary">Создать клиента</Button>
           </ModalFooter>

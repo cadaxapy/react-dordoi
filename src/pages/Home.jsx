@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Link, Redirect } from 'react-router-dom';
 import { db } from '../firebase.js';
-import Spinner from '../components/Spinner.jsx';
+import Spinner from 'react-spinkit';
 import OrderStatus from '../components/OrderStatus.jsx';
 import {PageLink, Pagination, PageItem, Button, Card, CardBody, CardImage, CardTitle, CardText } from 'mdbreact';
 import './Home.css';
@@ -9,22 +9,53 @@ import './Home.css';
 class Home extends Component {
   constructor(props) {
     super();
-    this.getProducts = this.getProducts.bind(this);
+    this.getOrders = this.getOrders.bind(this);
+    this.getMoreOrders = this.getMoreOrders.bind(this);
     this.state = {
-      orders: null,
+      orders: [],
       selectedOrderId: null,
-      loading: true
+      lastOrderId: null,
+      ordersAreLoading: true,
+      transfersAreLoading: true
     };
   }
   componentDidMount() {
-    db().collection('orders')
-    .orderBy('status', 'asc')
+    this.GetOrdersFromDb();
+    db().collection('transfers')
     .orderBy('createdAt', 'desc')
-    .get().then(orders => {
+    .get()
+    .then(transfers => {
       this.setState({
-        orders: orders,
-        loading: false
-      });
+        transfers: transfers,
+        transfersAreLoading: false
+      })
+    });
+  }
+  GetOrdersFromDb(lastOrderId) {
+    var orderRef;
+    if(!lastOrderId) {
+      orderRef = db().collection('orders')
+      .orderBy('status', 'asc')
+      .orderBy('createdAt', 'desc')
+      .limit(30)
+    } else {
+      orderRef = db().collection('orders')
+      .orderBy('status', 'asc')
+      .orderBy('createdAt', 'desc')
+      .startAfter(lastOrderId)
+      .limit(30)
+    }
+    return orderRef.get().then(orders => {
+      if(orders.empty) {
+        return this.setState({
+          ordersAreLoading: false
+        });
+      }
+      this.setState(prevState => ({
+        lastOrderId: orders.docs[orders.docs.length - 1],
+        orders: prevState.orders.concat(orders.docs),
+        ordersAreLoading: false
+      }));
     });
   }
   openOrder(id) {
@@ -33,7 +64,13 @@ class Home extends Component {
       redirect: true
     })
   }
-  getProducts() {
+  getMoreOrders() {
+    this.setState({
+      ordersAreLoading: true
+    });
+    this.GetOrdersFromDb(this.state.lastOrderId);
+  }
+  getOrders() {
     var orders = this.state.orders;
     var cards = [];
     orders.forEach(order => {
@@ -47,14 +84,44 @@ class Home extends Component {
           </CardBody>
       </Card>);
     });
+    if(this.state.ordersAreLoading) {
+      cards.push(<Spinner className="text-center" fadeIn='none' name='line-scale' color="aqua"/>);
+    } else {
+      cards.push(
+        <div className='text-center'>
+          <br/>
+          <Button onClick={this.getMoreOrders}>Загрузить еще</Button>
+        </div>
+      );
+    }
+    return cards;
+  }
+  GetTransfers() {
+    if(this.state.transfersAreLoading) {
+      return (
+        <Spinner className="text-center" fadeIn='none' name='line-scale' color="aqua"/>
+      )
+    }
+    var transfers = this.state.transfers;
+    var cards = [];
+    transfers.forEach(transfer => {
+      var data = transfer.data();
+      cards.push(<Card>
+          {/*<CardImage className="img-fluid" src="/assets/purchase-order.png" />*/}
+          <CardBody>
+              <CardTitle>{transfer.id}</CardTitle>
+              <CardText>
+                Клиент: {data.client.name}<br/>
+                Переводчик: {data.user.name}<br/>
+                Сумма: {data.amount}<br/>
+                Создано: {data.createdAt.toString()}<br/>
+              </CardText>
+          </CardBody>
+      </Card>);
+    });
     return cards;
   }
   render() {
-    if(this.state.loading) {
-      return (
-        <Spinner />
-      )
-    }
     if(this.state.redirect) {
       return (
         <Redirect to={'/order/' + this.state.selectedOrderId} />
@@ -63,33 +130,13 @@ class Home extends Component {
     return (
       <div className='container-fluid'>
         <div className="row">
-
           <div className="col-8">
             <h2 className='text-center'>Заказы</h2>
-            {this.getProducts()}
-            <br />
-            <Pagination className="justify-content-center pagination-lg">
-              <PageItem disabled>
-                <PageLink className="page-link" aria-label="Previous">
-                  <span aria-hidden="true">&laquo;</span>
-                  <span className="sr-only">Previous</span>
-                </PageLink>
-              </PageItem>
-              <PageItem active>
-                <PageLink className="page-link">
-                  1 <span className="sr-only">(current)</span>
-                </PageLink>
-              </PageItem>
-              <PageItem>
-                <PageLink className="page-link">
-                  &raquo;
-                </PageLink>
-              </PageItem>
-            </Pagination>
+            {this.getOrders()}
           </div>
-
           <div className="col">
-              <h2 className='text-center'>Переводы</h2>
+              <h2 className='text-center'>Последние 10 переводов</h2>
+              {this.GetTransfers()}
           </div>
         </div>
       </div>

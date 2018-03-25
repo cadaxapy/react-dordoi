@@ -32,19 +32,23 @@ class CustomNavbar extends Component {
         <Collapse isOpen={this.state.collapse} navbar>
           <NavbarNav className="mr-auto" onClick={this.onClick}>
             <NavItem>
+              <NavLink className="nav-link" to="/">Главная</NavLink>
+            </NavItem>
+            <NavItem>
               <NavLink className="nav-link" to="/order-new">Новый заказ</NavLink>
             </NavItem>
             <NavItem>
               <NavLink className="nav-link" to="/clients">Клиенты</NavLink>
             </NavItem>
             <NavItem>
-              <NavLink className="nav-link" to="/pricing">Пользователи</NavLink>
+              <NavLink className="nav-link" to="/managers">Пользователи</NavLink>
             </NavItem>
             <NavItem>
               <NavLink className="nav-link" to="/transfers">Переводы</NavLink>
             </NavItem>
-          </NavbarNav>
-          <NavbarNav>
+            <NavItem>
+              <NavLink className="nav-link" to="/carriers">Перевозчики</NavLink>
+            </NavItem>
             <NavItem className="ml-auto">
               <NavLink className="nav-link" to='/logout'><Fa icon="sign-out" /></NavLink>
             </NavItem>

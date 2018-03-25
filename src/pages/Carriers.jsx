@@ -1,39 +1,31 @@
 import React, { Component } from 'react';
 import { db } from '../firebase.js';
-import NewTransfer from './NewTransfer.jsx';
+import NewCarrier from './NewCarrier.jsx';
 import Spinner from '../components/Spinner.jsx'
 import { Alert, Table, PageHeader, Button } from 'react-bootstrap';
-function GetTransfers({transfers}) {
-  var transferList = [];
-  const i = 0;
-  for(let i in transfers) {
-    console.log(transfers[i].data());
-    const data = transfers[i].data();
-    transferList.push(
-      <tr key={i}>
-        <td>{data.client.name}</td>
-        <td>{data.user.name}</td>
-        <td>{data.amount}</td>
-        <td>{data.createdAt ? data.createdAt.toString() : (new Date()).toString()}</td>
+function GetCarriers({carriers}) {
+  var carrierList = [];
+  carriers.forEach(carrier => {
+    var data = carrier.data();
+    carrierList.push(
+      <tr key={carrier.id}>
+        <td>{data.name}</td>
+        <td>{data.address}</td>
+        <td>{data.phone}</td>
       </tr>
     )
-  }
-  transfers.forEach(transfer => {
-    var data = transfer.data();
-
   })
   return (
     <Table striped bordered condensed hover>
       <thead>
         <tr>
-          <th>Клиент</th>
-          <th>Переводчик</th>
-          <th>Сумма(Сом)</th>
-          <th>Время перевода</th>
+          <th>Название</th>
+          <th>Адрес</th>
+          <th>Номер телефона</th>
         </tr>
       </thead>
       <tbody>
-        {transferList}
+        {carrierList}
       </tbody>
     </Table>
   )
@@ -47,7 +39,7 @@ class Clients extends Component {
       loading: true,
       showModal: false,
       alert: false,
-      transfers: null
+      carriers: null
     };
   };
   showAlert() {
@@ -59,12 +51,13 @@ class Clients extends Component {
     this.setState({ showModal: false });
   }
   componentDidMount() {
-    db().collection('transfers')
+    db().collection('carriers')
     .orderBy('createdAt', 'desc')
-    .onSnapshot(transfers => {
+    .get()
+    .then(carriers => {
       this.setState({
         loading: false,
-        transfers: transfers.docs
+        carriers: carriers
       });
     });
   }
@@ -82,15 +75,15 @@ class Clients extends Component {
               alert: false
             })
           }}>
-            <strong>Перевод выполнен!</strong>
+            <strong>Перевозчик успешно создан!</strong>
           </Alert> : ""
         }
         <PageHeader>
-          Переводы&nbsp;&nbsp;
-          <Button onClick={() => { this.setState({ showModal: true }) }} bsStyle="primary">Новый перевод</Button>
+          Перевозчики&nbsp;&nbsp;
+          <Button onClick={() => { this.setState({ showModal: true }) }} bsStyle="primary">Добавить перевозчика</Button>
         </PageHeader>
-        <NewTransfer showAlert={this.showAlert} showModal={this.state.showModal} handleHide={this.handleHide} />
-        <GetTransfers transfers={this.state.transfers} />
+        <NewCarrier showAlert={this.showAlert} showModal={this.state.showModal} handleHide={this.handleHide} />
+        <GetCarriers carriers={this.state.carriers} />
       </div>
     );
   }

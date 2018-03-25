@@ -17,6 +17,7 @@ class NewTransfer extends Component {
     this.onUserSelect = this.onUserSelect.bind(this);
     this.state = {
       redirect: false,
+      error: false,
       clients: null,
       users: null,
       client: {
@@ -87,15 +88,31 @@ class NewTransfer extends Component {
   }
   onSubmit(e) {
     e.preventDefault();
+    var amount = parseInt(this.state.amount);
+    if(!this.state.client.id || !this.state.user.id || !amount || amount <= 0) {
+      return this.setState({
+        error: true
+      })
+    }
+    this.props.handleHide();
+    this.props.showAlert();
     db().collection('transfers').add({
       client: this.state.client,
       user: this.state.user,
       amount: parseInt(this.state.amount),
       createdAt: db.FieldValue.serverTimestamp()
     }).then(() => {
-      this.props.handleHide();
-      this.props.showAlert();
-    })
+      var clientRef = db().collection('clients').doc(this.state.client.id);
+      db().runTransaction(transaction => {
+        return transaction.get(clientRef)
+        .then(clientDoc => {
+          var newBudget = clientDoc.data().budget + amount;
+          return transaction.update(clientRef, {budget: newBudget});
+        });
+      }).catch(e => {
+        console.log(e);
+      });
+    });
   }
   componentDidMount() {
     Promise.all([
@@ -131,27 +148,35 @@ class NewTransfer extends Component {
           <ModalBody>
 
             <form>
-              <p className="h5 text-center mb-4">Добавить перевод</p>
+              <p className="h3 text-center mb-4">Добавить перевод</p>
+              <h5>Клиент</h5>
               <Select
                 name="client"
+                placeholder="Выберите клиента"
                 value={this.state.client.id}
                 onChange={this.onClientSelect}
                 options={this.getClients()}
                 searchable={true}
               />
+              <h5>Переводчик</h5>
               <Select
                 name="user"
+                placeholder="Выберите переводчика"
                 value={this.state.user.id}
                 onChange={this.onUserSelect}
                 options={this.getUsers()}
                 searchable={true}
               />
-              <Input label="Сумма" onChange={this.onChange} name="amount" icon="user" group type="text" validate error="wrong" success="right"/>
-
+              <h5>Сумма</h5>
+              <Input size='sm' onChange={this.onChange} name="amount" group type="number" validate error="wrong" success="right"/>
           </form>
 
           </ModalBody>
           <ModalFooter>
+            {this.state.error
+              ? <p style={{color: 'red'}}>ошибка валидации</p>
+              : ''
+            }
             <Button onClick={this.props.handleHide}>Close</Button>
             <Button onClick={this.onSubmit} type="submit" bsstyle="primary">Создать клиента</Button>
           </ModalFooter>

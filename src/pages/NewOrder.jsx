@@ -29,6 +29,7 @@ class NewOrder extends Component {
       carriers: null,
       orderPriceSum: 0,
       carrierCommission: 0,
+      validate: true,
       commission: 0,
       carrier: {
         id: null,
@@ -67,6 +68,11 @@ class NewOrder extends Component {
   }
   onSubmit(e) {
     e.preventDefault();
+    if(!this.state.client.id || !this.state.user.id) {
+      return this.setState({
+        validate: false
+      })
+    }
     db().collection('orders').add({
       client: this.state.client,
       user: this.state.user,
@@ -154,7 +160,7 @@ class NewOrder extends Component {
     var selectedClientCity = '';
     this.state.clients.forEach(client => {
       if(client.id == e.value) {
-        selectedClientCity = client.data().city.name;
+        selectedClientCity = client.data().city;
         return true;
       }
     })
@@ -212,6 +218,10 @@ class NewOrder extends Component {
             searchable={true}
           />
           <br/>
+          {!this.state.validate
+            ? <p style={{color: 'red'}}>ошибка валидации</p>
+            : ''
+          }
           <Button onClick={this.onSubmit} type="submit" bsstyle="primary">Создать Заказ</Button>
         </form>
       </div>
