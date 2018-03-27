@@ -1,12 +1,9 @@
 import React, { Component } from 'react';
-import { Redirect } from 'react-router-dom';
 import { db } from '../firebase.js';
-import Spinner from '../components/Spinner.jsx'
-import Select from 'react-select';
 import 'react-select/dist/react-select.css';
-import { Table, FormControl, ControlLabel } from 'react-bootstrap';
+import { Table } from 'react-bootstrap';
 import './ProductModal.css';
-import { Popover, PopoverBody, PopoverHeader, Button, Modal, ModalHeader, ModalBody, ModalFooter, FormInline, Input} from 'mdbreact';
+import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Input} from 'mdbreact';
 function NewProductPopover({validate, productAmount, onSubmit, onChange, showProductForm, handleHide, saveProduct}) {
   return (
     <Modal
@@ -86,8 +83,8 @@ class ProductModal extends Component {
           <td>{data.price}</td>
           <td>{data.amount}</td>
           {
-            this.props.order.data().status == 0
-            ? <td><a href="#" className='btn btn-warning .btn-xs' onClick={() => {
+            this.props.order.data().status === 0
+            ? <td><a className='btn btn-warning .btn-xs' onClick={() => {
               this.props.deleteProduct(i);
             }}>Удалить</a></td> : ''
           }
@@ -98,9 +95,9 @@ class ProductModal extends Component {
   }
   onProductValueSave(e) {
     e.preventDefault();
-    const quantity = parseInt(this.state.productQuantity);
-    const price = parseInt(this.state.productPrice);
-    const amount = parseInt(this.state.productAmount);
+    const quantity = parseInt(this.state.productQuantity, 10);
+    const price = parseInt(this.state.productPrice, 10);
+    const amount = parseInt(this.state.productAmount, 10);
     if(!this.state.productName || quantity <= 0 || price <= 0) {
       return this.setState({
         validate: false
@@ -116,12 +113,12 @@ class ProductModal extends Component {
     });
   }
   onProductValueChange(e) {
-    if(e.target.name == 'productQuantity') {
+    if(e.target.name === 'productQuantity') {
       this.setState({
         productAmount: e.target.value * this.state.productPrice
       })
     }
-    if(e.target.name == 'productPrice') {
+    if(e.target.name === 'productPrice') {
       this.setState({
         productAmount: e.target.value * this.state.productQuantity
       })
@@ -133,7 +130,6 @@ class ProductModal extends Component {
   render() {
     const showModal = this.props.showModal;
     const handleHide = this.props.handleHide;
-    const products = this.props.getProducts;
     return (
       <div className='container'>
         <NewProductPopover
@@ -159,7 +155,7 @@ class ProductModal extends Component {
                   <th>Цена</th>
                   <th>Сумма</th>
                   {
-                    this.props.order.data().status == 0
+                    this.props.order.data().status === 0
                     ? <th></th> : ''
                   }
 
@@ -171,7 +167,7 @@ class ProductModal extends Component {
             </Table>
           </ModalBody>
           {
-            this.props.order.data().status == 0 ?
+            this.props.order.data().status === 0 ?
             <ModalFooter>
               <Button onClick={(e) => {this.setState({showProductForm: true})}} bsstyle="primary">Добавить новый товар</Button>
             </ModalFooter> : ''

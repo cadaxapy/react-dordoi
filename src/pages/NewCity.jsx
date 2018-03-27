@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { db } from '../firebase.js';
 import 'react-select/dist/react-select.css';
 import { Button, Modal, ModalBody, ModalHeader, ModalFooter, Input } from 'mdbreact';
-class NewTransfer extends Component {
+class NewCity extends Component {
   constructor() {
     super();
     this.onSubmit = this.onSubmit.bind(this);
@@ -11,8 +11,7 @@ class NewTransfer extends Component {
       validate: true,
       loading: true,
       name: null,
-      address: null,
-      phone: null
+      id: null
     };
   };
   onChange(e) {
@@ -22,18 +21,16 @@ class NewTransfer extends Component {
   };
   onSubmit(e) {
     e.preventDefault();
-    if(!this.state.address || !this.state.name || !this.state.phone) {
+    if(!this.state.name || !this.state.id) {
       return this.setState({
         validate: false
       })
     }
     this.props.handleHide();
     this.props.showAlert();
-    db().collection('carriers').add({
+    db().collection('cities').add({
       name: this.state.name,
-      address: this.state.address,
-      phone: this.state.phone,
-      createdAt: db.FieldValue.serverTimestamp()
+      id: this.state.id
     });
   }
   componentDidMount() {
@@ -46,14 +43,13 @@ class NewTransfer extends Component {
           toggle={this.props.handleHide}
           backdrop={"static"}
         >
-          <ModalHeader toggle={this.props.handleHide}>Перевозчик</ModalHeader>
+          <ModalHeader toggle={this.props.handleHide}>Город</ModalHeader>
           <ModalBody>
 
             <form>
-              <p className="h3 text-center mb-4">Добавить перевозчика</p>
+              <p className="h3 text-center mb-4">Добавить</p>
               <Input label="Название" onChange={this.onChange} name="name" group type="text" validate error="wrong" success="right"/>
-              <Input label="Адрес" onChange={this.onChange} name="address" group type="text" validate error="wrong" success="right"/>
-              <Input label="Телефон" onChange={this.onChange} name="phone" group type="text" validate error="wrong" success="right"/>
+              <Input label="id" onChange={this.onChange} name="id" group type="text" validate error="wrong" success="right"/>
           </form>
           </ModalBody>
           <ModalFooter>
@@ -70,4 +66,4 @@ class NewTransfer extends Component {
   }
 }
 
-export default NewTransfer;
+export default NewCity;

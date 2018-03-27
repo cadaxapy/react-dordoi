@@ -14,6 +14,7 @@ function GetClients({clients}) {
         <td>{data.phone}</td>
         <td>{data.city.name}</td>
         <td>{data.currency.name}</td>
+        <td>{data.budget}</td>
       </tr>
     )
   })
@@ -26,6 +27,7 @@ function GetClients({clients}) {
           <th>Номер телефона</th>
           <th>Город</th>
           <th>Валюта</th>
+          <th>Бюджет</th>
         </tr>
       </thead>
       <tbody>
@@ -57,8 +59,7 @@ class Clients extends Component {
   componentDidMount() {
     db().collection('clients')
     .orderBy('createdAt', 'desc')
-    .get()
-    .then(clients => {
+    .onSnapshot(clients => {
       this.setState({
         loading: false,
         clients: clients

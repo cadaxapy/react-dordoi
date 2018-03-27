@@ -57,7 +57,7 @@ class NewTransfer extends Component {
   onClientSelect(e) {
     var selectedClientCity = "";
     this.state.clients.forEach(client => {
-      if(client.id == e.value) {
+      if(client.id === e.value) {
         selectedClientCity = client.data().city.name;
         return true;
       }
@@ -88,7 +88,7 @@ class NewTransfer extends Component {
   }
   onSubmit(e) {
     e.preventDefault();
-    var amount = parseInt(this.state.amount);
+    var amount = parseInt(this.state.amount, 10);
     if(!this.state.client.id || !this.state.user.id || !amount || amount <= 0) {
       return this.setState({
         error: true
@@ -99,7 +99,7 @@ class NewTransfer extends Component {
     db().collection('transfers').add({
       client: this.state.client,
       user: this.state.user,
-      amount: parseInt(this.state.amount),
+      amount: parseInt(this.state.amount, 10),
       createdAt: db.FieldValue.serverTimestamp()
     }).then(() => {
       var clientRef = db().collection('clients').doc(this.state.client.id);

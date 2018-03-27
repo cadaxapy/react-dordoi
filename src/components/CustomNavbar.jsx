@@ -49,6 +49,9 @@ class CustomNavbar extends Component {
             <NavItem>
               <NavLink className="nav-link" to="/carriers">Перевозчики</NavLink>
             </NavItem>
+            <NavItem>
+              <NavLink className="nav-link" to="/cities">Города</NavLink>
+            </NavItem>
             <NavItem className="ml-auto">
               <NavLink className="nav-link" to='/logout'><Fa icon="sign-out" /></NavLink>
             </NavItem>

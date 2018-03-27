@@ -29,13 +29,8 @@ class Auth extends Component {
       if(user) {
         var usersRef = db().collection('users');
         return usersRef.doc(user.uid).get().then(doc => {
-          if(!doc.exists) {
-            usersRef.doc(user.uid).set({
-              phone: user.phoneNumber
-            });
-          }
           this.setState({
-            authorized: true
+            authorized: doc.exists
           })
         });
       }

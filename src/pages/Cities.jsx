@@ -1,17 +1,16 @@
 import React, { Component } from 'react';
 import { db } from '../firebase.js';
-import NewCarrier from './NewCarrier.jsx';
+import NewCity from './NewCity.jsx';
 import Spinner from '../components/Spinner.jsx'
 import { Alert, Table, PageHeader, Button } from 'react-bootstrap';
-function GetCarriers({carriers}) {
-  var carrierList = [];
-  carriers.forEach(carrier => {
-    var data = carrier.data();
-    carrierList.push(
-      <tr key={carrier.id}>
+function GetCities({cities}) {
+  var cityList = [];
+  cities.forEach(city => {
+    var data = city.data();
+    cityList.push(
+      <tr key={city.id}>
         <td>{data.name}</td>
-        <td>{data.address}</td>
-        <td>{data.phone}</td>
+        <td>{data.id}</td>
       </tr>
     )
   })
@@ -20,17 +19,16 @@ function GetCarriers({carriers}) {
       <thead>
         <tr>
           <th>Название</th>
-          <th>Адрес</th>
-          <th>Номер телефона</th>
+          <th>id</th>
         </tr>
       </thead>
       <tbody>
-        {carrierList}
+        {cityList}
       </tbody>
     </Table>
   )
 }
-class Carriers extends Component {
+class Cities extends Component {
   constructor() {
     super();
     this.handleHide = this.handleHide.bind(this);
@@ -39,7 +37,7 @@ class Carriers extends Component {
       loading: true,
       showModal: false,
       alert: false,
-      carriers: null
+      cities: null
     };
   };
   showAlert() {
@@ -51,12 +49,11 @@ class Carriers extends Component {
     this.setState({ showModal: false });
   }
   componentDidMount() {
-    db().collection('carriers')
-    .orderBy('createdAt', 'desc')
-    .onSnapshot(carriers => {
+    db().collection('cities')
+    .onSnapshot(cities => {
       this.setState({
         loading: false,
-        carriers: carriers
+        cities: cities
       });
     });
   }
@@ -74,18 +71,18 @@ class Carriers extends Component {
               alert: false
             })
           }}>
-            <strong>Перевозчик успешно создан!</strong>
+            <strong>Город успешно добавлен!</strong>
           </Alert> : ""
         }
         <PageHeader>
-          Перевозчики&nbsp;&nbsp;
-          <Button onClick={() => { this.setState({ showModal: true }) }} bsStyle="primary">Добавить перевозчика</Button>
+          Города&nbsp;&nbsp;
+          <Button onClick={() => { this.setState({ showModal: true }) }} bsStyle="primary">Добавить город</Button>
         </PageHeader>
-        <NewCarrier showAlert={this.showAlert} showModal={this.state.showModal} handleHide={this.handleHide} />
-        <GetCarriers carriers={this.state.carriers} />
+        <NewCity showAlert={this.showAlert} showModal={this.state.showModal} handleHide={this.handleHide} />
+        <GetCities cities={this.state.cities} />
       </div>
     );
   }
 }
 
-export default Carriers;
+export default Cities;

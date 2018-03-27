@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
-import { Link, Redirect } from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
 import { db } from '../firebase.js';
 import Spinner from '../components/Spinner.jsx'
 import Select from 'react-select';
 import 'react-select/dist/react-select.css';
-import { Button, Modal, ModalBody, ModalHeader, ModalFooter, Input } from 'mdbreact';
-import ProductModal from '../components/ProductModal.jsx';
+import { Button } from 'mdbreact';
 
 import './NewOrder.css';
 
@@ -17,12 +16,6 @@ class NewOrder extends Component {
     this.onClientSelect = this.onClientSelect.bind(this);
     this.getUsers = this.getUsers.bind(this);
     this.onUserSelect = this.onUserSelect.bind(this);
-    this.getCarriers = this.getCarriers.bind(this);
-    this.onCarrierSelect = this.onCarrierSelect.bind(this);
-    this.addProduct = this.addProduct.bind(this);
-    this.deleteProduct = this.deleteProduct.bind(this);
-    this.onOrderChange = this.onOrderChange.bind(this);
-    this.handleProductModal = this.handleProductModal.bind(this);
     this.state = {
       loading: true,
       orderId: null,
@@ -44,11 +37,7 @@ class NewOrder extends Component {
         name: null
       },
       users: null,
-      user: {
-        id: null,
-        name: null,
-        cityName: null
-      }
+      selectedUsers: []
     }
   }
   componentDidMount() {
@@ -68,14 +57,19 @@ class NewOrder extends Component {
   }
   onSubmit(e) {
     e.preventDefault();
-    if(!this.state.client.id || !this.state.user.id) {
+    var selectedUsers = this.state.selectedUsers;
+    if(!this.state.client.id || selectedUsers.length === 0) {
       return this.setState({
         validate: false
       })
     }
+    var userIds = {};
+    for(let i in selectedUsers) {
+      userIds[selectedUsers[i].value] = true;
+    }
     db().collection('orders').add({
       client: this.state.client,
-      user: this.state.user,
+      users: userIds,
       status: 0,
       createdAt: db.FieldValue.serverTimestamp()
     }).then((orderRef) => {
@@ -85,27 +79,7 @@ class NewOrder extends Component {
       });
     });
   }
-  addProduct(item) {
-    const newProducts = this.state.products.concat([item]);
-    console.log(newProducts);
-    var sumOfProducts = 0;
-    for(let i in newProducts) {
-      sumOfProducts += parseInt(newProducts[i].sum);
-    }
-    this.setState({
-      orderPriceSum: sumOfProducts + parseInt(this.state.carrierCommission) + parseInt(this.state.commission),
-      products: newProducts
-    });
-  }
-  deleteProduct(i) {
-    var updatedProducts = this.state.products;
-    var sumOfProduct = parseInt(updatedProducts[i].sum);
-    updatedProducts.splice(i, 1);
-    this.setState(prevState => ({
-      orderPriceSum: prevState.orderPriceSum - sumOfProduct,
-      products: updatedProducts
-    }));
-  }
+
   getClients() {
     var clients = this.state.clients;
     var clientOptions = [];
@@ -114,22 +88,7 @@ class NewOrder extends Component {
     });
     return clientOptions;
   }
-  getCarriers() {
-    var carriers = this.state.carriers;
-    var carrierOptions = [];
-    carriers.forEach(carrier => {
-      carrierOptions.push({value: carrier.id, label: carrier.data().name});
-    });
-    return carrierOptions;
-  }
-  onCarrierSelect(e) {
-    this.setState({
-      carrier: {
-        id: e.value,
-        name: e.label,
-      }
-    });
-  }
+
   getUsers() {
     var users = this.state.users;
     var userOptions = [];
@@ -138,28 +97,11 @@ class NewOrder extends Component {
     });
     return userOptions;
   }
-  onOrderChange(e) {
-    var sumOfProducts = 0;
-    const products = this.state.products;
-    for(let i in products) {
-      sumOfProducts += parseInt(products[i].sum);
-    }
-    if(e.target.name == 'carrierCommission') {
-      this.setState({
-        [e.target.name]: e.target.value,
-        orderPriceSum: sumOfProducts + parseInt(e.target.value) + parseInt(this.state.commission)
-      });
-    } else if(e.target.name == 'commission') {
-      this.setState({
-        [e.target.name]: e.target.value,
-        orderPriceSum: sumOfProducts + parseInt(e.target.value) + parseInt(this.state.carrierCommission)
-      })
-    }
-  }
+
   onClientSelect(e) {
     var selectedClientCity = '';
     this.state.clients.forEach(client => {
-      if(client.id == e.value) {
+      if(client.id === e.value) {
         selectedClientCity = client.data().city;
         return true;
       }
@@ -177,12 +119,9 @@ class NewOrder extends Component {
       showProductModal: !prevState.showProductModal
     }));
   }
-  onUserSelect(e) {
+  onUserSelect(value) {
     this.setState({
-      user: {
-        id: e.value,
-        name: e.label
-      }
+      selectedUsers: value
     })
   }
   render() {
@@ -211,12 +150,12 @@ class NewOrder extends Component {
           <br/>
           <h4>Пользователь</h4>
           <Select
-            name="user"
-            value={this.state.user.id}
-            onChange={this.onUserSelect}
+  					multi
+  					onChange={this.onUserSelect}
+            removeSelected={this.state.removeSelected}
             options={this.getUsers()}
-            searchable={true}
-          />
+  					value={this.state.selectedUsers}
+  				/>
           <br/>
           {!this.state.validate
             ? <p style={{color: 'red'}}>ошибка валидации</p>

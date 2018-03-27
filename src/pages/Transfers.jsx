@@ -5,7 +5,6 @@ import Spinner from '../components/Spinner.jsx'
 import { Alert, Table, PageHeader, Button } from 'react-bootstrap';
 function GetTransfers({transfers}) {
   var transferList = [];
-  const i = 0;
   for(let i in transfers) {
     console.log(transfers[i].data());
     const data = transfers[i].data();
@@ -18,10 +17,6 @@ function GetTransfers({transfers}) {
       </tr>
     )
   }
-  transfers.forEach(transfer => {
-    var data = transfer.data();
-
-  })
   return (
     <Table striped bordered condensed hover>
       <thead>

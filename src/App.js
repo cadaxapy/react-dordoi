@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import {BrowserRouter as Router, Route, Redirect } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import NewOrder from './pages/NewOrder.jsx'
@@ -11,11 +10,13 @@ import Managers from './pages/Managers.jsx';
 import Clients from './pages/Clients.jsx';
 import Carriers from './pages/Carriers.jsx';
 import Transfers from './pages/Transfers.jsx';
+import Cities from './pages/Cities.jsx';
+import Client from './pages/Client.jsx';
 import Logout from './components/Logout.jsx';
 import Spinner from './components/Spinner.jsx';
 import Auth from './pages/Auth.jsx';
 import Navbar from './components/CustomNavbar.jsx';
-import { auth } from './firebase.js';
+import { db, auth } from './firebase.js';
 import './App.css';
 
 function ProtectedRoute(props) {
@@ -38,10 +39,14 @@ class App extends Component {
   }
   componentDidMount() {
     auth().onAuthStateChanged((user) => {
-      this.setState({
-        authorized: !!user,
-        loading: false
-      })
+      db().collection('users').doc(user.uid)
+      .get()
+      .then(userSnap => {
+        this.setState({
+          authorized: userSnap.exists,
+          loading: false
+        })
+      });
     })
   }
   render() {
@@ -60,12 +65,14 @@ class App extends Component {
           <ProtectedRoute authorized={this.state.authorized} path='/news' component={News} />
           <ProtectedRoute authorized={this.state.authorized} path='/logout' component={Logout} />
           <ProtectedRoute authorized={this.state.authorized} path='/clients' component={Clients} />
+          <ProtectedRoute authorized={true} path='/client/:clientId' component={Client} />
           <ProtectedRoute authorized={this.state.authorized} path='/order-new' component={NewOrder} />
           <ProtectedRoute authorized={this.state.authorized} path='/client/new' component={NewClient} />
           <ProtectedRoute authorized={this.state.authorized} path='/order/:orderId' component={Order} />
           <ProtectedRoute authorized={this.state.authorized} path='/transfers' component={Transfers} />
           <ProtectedRoute authorized={this.state.authorized} path='/managers' component={Managers} />
           <ProtectedRoute authorized={this.state.authorized} path='/carriers' component={Carriers} />
+          <ProtectedRoute authorized={this.state.authorized} path='/cities' component={Cities} />
         </div>
       </Router>
     );

@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
-import { Link, Redirect } from 'react-router-dom';
 import { db } from '../firebase.js';
 import Spinner from 'react-spinkit';
-import OrderStatus from '../components/OrderStatus.jsx';
-import {PageLink, Pagination, PageItem, Button, Card, CardBody, CardImage, CardTitle, CardText } from 'mdbreact';
+import { Card, CardText, CardBody, CardTitle, Button } from 'mdbreact';
+import OrderCard from '../components/OrderCard.jsx';
 import './Home.css';
 
 class Home extends Component {
@@ -74,15 +73,7 @@ class Home extends Component {
     var orders = this.state.orders;
     var cards = [];
     orders.forEach(order => {
-      var data = order.data();
-      cards.push(<Card>
-          {/*<CardImage className="img-fluid" src="/assets/purchase-order.png" />*/}
-          <CardBody>
-              <CardTitle>{order.id}</CardTitle>
-              <CardText><OrderStatus status={data.status}/></CardText>
-              <Button onClick={(e) => {this.openOrder(order.id)}}>Открыть заказ</Button>
-          </CardBody>
-      </Card>);
+      cards.push(<OrderCard order={order}></OrderCard>);
     });
     if(this.state.ordersAreLoading) {
       cards.push(<Spinner className="text-center" fadeIn='none' name='line-scale' color="aqua"/>);
@@ -122,11 +113,6 @@ class Home extends Component {
     return cards;
   }
   render() {
-    if(this.state.redirect) {
-      return (
-        <Redirect to={'/order/' + this.state.selectedOrderId} />
-      )
-    }
     return (
       <div className='container-fluid'>
         <div className="row">

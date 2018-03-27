@@ -1,32 +1,34 @@
 import React, { Component } from 'react';
 import { db } from '../firebase.js';
-import NewClient from './NewClient.jsx';
 import Spinner from '../components/Spinner.jsx'
-import {Button, Dropdown, DropdownToggle, DropdownMenu, DropdownItem} from 'mdbreact';
-import { Alert, Table, PageHeader} from 'react-bootstrap';
-function GetManagers({managers, getRoles, toggleRoleDropDown, roleDD}) {
+import {Dropdown, DropdownToggle, DropdownMenu, DropdownItem} from 'mdbreact';
+import {Table, PageHeader} from 'react-bootstrap';
+function GetManagers({managers, getRoles, toggleRoleDropDown}) {
   var managerList = [];
-  managers.forEach(manager => {
+  for(let i in managers) {
+    var manager = managers[i];
     var data = manager.data();
     managerList.push(
       <tr key={manager.id}>
         <td>{data.name}</td>
         <td>{data.lastName}</td>
         <td>{data.phone}</td>
-        <td><p className='h4'>{data.role.name}</p></td>
+        <td><p className='h4'>{data.role}</p></td>
         <td>
-        <Dropdown isOpen = { roleDD } toggle = { toggleRoleDropDown }>
-        <DropdownToggle caret color="primary">
-          Поменять роль
-        </DropdownToggle>
-        <DropdownMenu>
-          {getRoles(manager.id)}
-        </DropdownMenu>
-      </Dropdown>
+          <Dropdown isOpen = { manager.toggleRoleDropDown } toggle = { e => {
+            toggleRoleDropDown(i)
+          }}>
+            <DropdownToggle caret color="primary">
+              Поменять роль
+            </DropdownToggle>
+            <DropdownMenu>
+              {getRoles(manager.id)}
+            </DropdownMenu>
+          </Dropdown>
         </td>
       </tr>
     )
-  })
+  };
   return (
     <Table striped bordered condensed hover>
       <thead>
@@ -51,12 +53,11 @@ class Clients extends Component {
     this.showAlert = this.showAlert.bind(this);
     this.getRoles = this.getRoles.bind(this);
     this.toggleRoleDropDown = this.toggleRoleDropDown.bind(this);
+    this.roles = ['new', 'admin', 'worker', 'manager', 'blocked'];
     this.state = {
       loading: true,
       showModal: false,
-      users: null,
-      roleDD: false,
-      roles: null
+      users: []
     };
   };
   showAlert() {
@@ -64,47 +65,40 @@ class Clients extends Component {
       alert: true
     })
   }
-  toggleRoleDropDown() {
+  toggleRoleDropDown(i) {
+    var users = this.state.users;
+    users[i].toggleRoleDropDown = !users[i].toggleRoleDropDown;
     this.setState({
-      roleDD: !this.state.roleDD
+      users: users
     })
   }
-  changeRole({role, managerId}) {
-    db().collection('users').doc(managerId).update({
-      role: {
-        id: role.id,
-        name: role.name
-      }
-    })
+  changeRole(e) {
+    db().collection('users').doc(e.target.dataset.manager_id).update({
+      role: e.target.dataset.value
+    });
   }
   getRoles(managerId) {
     var roleList = [];
-    this.state.roles.forEach(role => {
-      var data = role.data();
-      roleList.push(<DropdownItem onClick={e => {
-        this.changeRole({role: {
-          id: role.id,
-          name: data.name
-        }, managerId: managerId})
-      }}>{data.name}</DropdownItem>);
-    });
+    const roles = this.roles;
+    for(let i in roles) {
+      var role = roles[i];
+      roleList.push(<DropdownItem key={i} data-value={role} data-manager_id={managerId} onClick={this.changeRole}>{role}</DropdownItem>);
+    }
     return roleList;
   }
   handleHide() {
     this.setState({ showModal: false });
   }
   componentDidMount() {
-    Promise.all([
-      db().collection('users')
-      .orderBy('createdAt', 'desc')
-      .get(),
-      db().collection('roles')
-      .get()
-    ]).then(([users, roles]) => {
+    db().collection('users')
+    .onSnapshot(users => {
+      const userList = users.docs.map(e => {
+        e.toggleRoleDropDown = false;
+        return e;
+      });
       this.setState({
         loading: false,
-        users: users,
-        roles: roles
+        users: userList
       });
     });
   }
@@ -119,7 +113,7 @@ class Clients extends Component {
         <PageHeader>
           Менеджеры&nbsp;&nbsp;
         </PageHeader>
-        <GetManagers getRoles={this.getRoles} toggleRoleDropDown={this.toggleRoleDropDown} roleDD={this.state.roleDD} managers={this.state.users} />
+        <GetManagers getRoles={this.getRoles} toggleRoleDropDown={this.toggleRoleDropDown} managers={this.state.users} />
       </div>
     );
   }
