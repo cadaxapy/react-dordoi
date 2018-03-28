@@ -20,6 +20,7 @@ class Client extends Component {
       orders: [],
     }
   }
+
   handleHide() {
     this.setState({ showProduct: false });
   }

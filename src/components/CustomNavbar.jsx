@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { NavLink } from 'react-router-dom';
+import { auth } from '../firebase.js';
 //import {NavDropdown, MenuItem, Navbar, Nav, NavItem, Glyphicon } from 'react-bootstrap';
 import { Navbar, NavbarBrand, NavbarToggler, Fa, Collapse, NavbarNav, NavItem } from 'mdbreact';import './CustomNavbar.css';
 
@@ -22,6 +23,19 @@ class CustomNavbar extends Component {
       return (
         <Navbar color="indigo" dark expand="md" fixed="top" scrolling>
           <NavbarBrand href='/'>Дордой</NavbarBrand>
+          {!this.state.isWideEnough && <NavbarToggler onClick ={this.onClick} />}
+          {
+            auth().currentUser
+            ?
+            <Collapse isOpen={this.state.collapse} navbar>
+                <NavbarNav className="mr-auto" onClick={this.onClick}>
+                  <NavItem className="ml-auto">
+                    <NavLink className="nav-link" to='/logout'><Fa icon="sign-out" /></NavLink>
+                  </NavItem>
+                </NavbarNav>
+              </Collapse>
+            : ""
+          }
         </Navbar>
       );
     }

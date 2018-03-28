@@ -83,7 +83,7 @@ class ProductModal extends Component {
           <td>{data.price}</td>
           <td>{data.amount}</td>
           {
-            this.props.order.data().status === 0
+            this.props.checkChangePermission()
             ? <td><a className='btn btn-warning .btn-xs' onClick={() => {
               this.props.deleteProduct(i);
             }}>Удалить</a></td> : ''
@@ -155,7 +155,7 @@ class ProductModal extends Component {
                   <th>Цена</th>
                   <th>Сумма</th>
                   {
-                    this.props.order.data().status === 0
+                    this.props.checkChangePermission()
                     ? <th></th> : ''
                   }
 
@@ -167,7 +167,7 @@ class ProductModal extends Component {
             </Table>
           </ModalBody>
           {
-            this.props.order.data().status === 0 ?
+            this.props.checkChangePermission() ?
             <ModalFooter>
               <Button onClick={(e) => {this.setState({showProductForm: true})}} bsstyle="primary">Добавить новый товар</Button>
             </ModalFooter> : ''

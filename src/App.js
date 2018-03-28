@@ -25,8 +25,10 @@ function ProtectedRoute(props) {
       <Redirect to='/auth' />
     );
   }
+  const Component = props.component;
+  const user = props.user;
   return (
-    <Route exact path={ props.path } component={ props.component } />
+    <Route exact path={ props.path } render={props => (<Component user={user} {...props}/>)} />
   );
 };
 class App extends Component {
@@ -34,16 +36,27 @@ class App extends Component {
     super();
     this.state = {
       authorized: false,
+      user: null,
       loading: true
     }
   }
   componentDidMount() {
     auth().onAuthStateChanged((user) => {
+      if(!user) {
+        return this.setState({
+          authorized: false,
+          loading: false
+        })
+      }
       db().collection('users').doc(user.uid)
-      .get()
-      .then(userSnap => {
+      .onSnapshot(userSnap => {
+        var authorized = false;
+        if(userSnap.exists && userSnap.data().role !== 'blocked') {
+          authorized = true;
+        }
         this.setState({
-          authorized: userSnap.exists,
+          authorized: authorized,
+          user: userSnap,
           loading: false
         })
       });
@@ -63,12 +76,12 @@ class App extends Component {
           <ProtectedRoute authorized={this.state.authorized} path='/' component={Home} />
           <ProtectedRoute authorized={this.state.authorized} path='/about' component={About} />
           <ProtectedRoute authorized={this.state.authorized} path='/news' component={News} />
-          <ProtectedRoute authorized={this.state.authorized} path='/logout' component={Logout} />
+          <ProtectedRoute authorized={auth().currentUser} path='/logout' component={Logout} />
           <ProtectedRoute authorized={this.state.authorized} path='/clients' component={Clients} />
           <ProtectedRoute authorized={true} path='/client/:clientId' component={Client} />
           <ProtectedRoute authorized={this.state.authorized} path='/order-new' component={NewOrder} />
           <ProtectedRoute authorized={this.state.authorized} path='/client/new' component={NewClient} />
-          <ProtectedRoute authorized={this.state.authorized} path='/order/:orderId' component={Order} />
+          <ProtectedRoute user={this.state.user} authorized={this.state.authorized} path='/order/:orderId' component={Order} />
           <ProtectedRoute authorized={this.state.authorized} path='/transfers' component={Transfers} />
           <ProtectedRoute authorized={this.state.authorized} path='/managers' component={Managers} />
           <ProtectedRoute authorized={this.state.authorized} path='/carriers' component={Carriers} />

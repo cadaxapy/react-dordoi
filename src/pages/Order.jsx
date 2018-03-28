@@ -57,6 +57,7 @@ class NewOrder extends Component {
     this.getOrderPriceSum = this.getOrderPriceSum.bind(this);
     this.getInputCarrier = this.getInputCarrier.bind(this);
     this.handleUsersHide = this.handleUsersHide.bind(this);
+    this.checkChangePermission = this.checkChangePermission.bind(this);
     this.state = {
       loading: true,
       users: [],
@@ -74,6 +75,18 @@ class NewOrder extends Component {
         name: null
       }
     }
+  }
+  checkChangePermission() {
+    const userData = this.props.user.data();
+    const orderData = this.state.order.data();
+    if(orderData.status !== 0 || userData.role !== 'manager') {
+      return false;
+    }
+    var userIds = Object.keys(orderData.users);
+    if(userIds.indexOf(this.props.user.id) === -1) {
+      return false;
+    }
+    return true;
   }
   handleHide() {
     this.setState({ showProduct: false });
@@ -97,7 +110,7 @@ class NewOrder extends Component {
           <td>{data.price}</td>
           <td>{data.amount}</td>
           {
-            this.state.order.data().status === 0 ?
+            this.checkChangePermission() ?
             <td><a className='btn btn-warning .btn-xs' onClick={() => {
               productRef.delete();
             }}>Удалить</a></td> : ''
@@ -178,7 +191,7 @@ class NewOrder extends Component {
     })
   }
   getInputCarrier() {
-    if(this.state.order.data().status === 0) {
+    if(this.checkChangePermission()) {
       return (
         <Select name="client" placeholder="Выберите перевозчика" value={this.state.selectedCarrier.id}  onChange={this.onCarrierSelect} options={this.getCarriers()}  searchable={true} />
       );
@@ -229,7 +242,7 @@ class NewOrder extends Component {
     return (
       <div>
         <UsersModal users={this.state.users} showModal={this.state.showUsers} handleHide={this.handleUsersHide} />
-        <ProductsModal order={order} getProducts={this.getProducts} showModal={this.state.showProduct} handleHide={this.handleHide} />
+        <ProductsModal checkChangePermission = {this.checkChangePermission} order={order} getProducts={this.getProducts} showModal={this.state.showProduct} handleHide={this.handleHide} />
         <div className='border rounded z-depth-3 h-50 w-50 container'>
           <h1 className='text-center'>{"Заказ №" + order.id}</h1>
           <Table striped bordered condensed hover>
@@ -253,7 +266,7 @@ class NewOrder extends Component {
               <tr>
                 <td>Комиссия</td>
                 <td>
-                  {order.data().status === 0
+                  {this.checkChangePermission()
                     ? <Input type="number" inputmode="numeric" onChange={this.onOrderChange} name="commission" group validate error="wrong" success="right"/>
                     : order.data().commission
                   }
@@ -278,7 +291,7 @@ class NewOrder extends Component {
                 <td>Общая сумма</td>
                 <td>
                   {
-                    order.data().status === 0
+                    this.checkChangePermission()
                     ?<input disabled onChange={this.onOrderChange} type="number" value={this.getOrderPriceSum()} className="form-control form-control-sm"/>
                     :order.data().orderPriceSum
                   }
@@ -297,7 +310,7 @@ class NewOrder extends Component {
             : ''
           }
           {
-            order.data().status === 0
+            this.checkChangePermission()
             ? <Button onClick={this.updateOrder} bsstyle="primary">Создать Заказ</Button>
             : ''
           }
