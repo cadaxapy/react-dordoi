@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import {BrowserRouter as Router, Route, Redirect } from 'react-router-dom';
+import { MemoryRouter as Router, Route, Redirect } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import NewOrder from './pages/NewOrder.jsx'
 import Order from './pages/Order.jsx';
@@ -51,7 +51,7 @@ class App extends Component {
       db().collection('users').doc(user.uid)
       .onSnapshot(userSnap => {
         var authorized = false;
-        if(userSnap.exists && userSnap.data().role !== 'blocked') {
+        if(userSnap.exists && (userSnap.data().role === 'manager' || userSnap.data().role === 'admin')) {
           authorized = true;
         }
         this.setState({
@@ -81,7 +81,7 @@ class App extends Component {
           <ProtectedRoute authorized={true} path='/client/:clientId' component={Client} />
           <ProtectedRoute authorized={this.state.authorized} path='/order-new' component={NewOrder} />
           <ProtectedRoute authorized={this.state.authorized} path='/client/new' component={NewClient} />
-          <ProtectedRoute user={this.state.user} authorized={this.state.authorized} path='/order/:orderId' component={Order} />
+          <ProtectedRoute user={this.state.user} authorized={true} path='/order/:orderId' component={Order} />
           <ProtectedRoute authorized={this.state.authorized} path='/transfers' component={Transfers} />
           <ProtectedRoute authorized={this.state.authorized} path='/managers' component={Managers} />
           <ProtectedRoute authorized={this.state.authorized} path='/carriers' component={Carriers} />

@@ -77,13 +77,13 @@ class NewOrder extends Component {
     }
   }
   checkChangePermission() {
-    const userData = this.props.user.data();
-    const orderData = this.state.order.data();
-    if(orderData.status !== 0 || userData.role !== 'manager') {
+    const userRef = this.props.user;
+    if(!userRef) {
       return false;
     }
-    var userIds = Object.keys(orderData.users);
-    if(userIds.indexOf(this.props.user.id) === -1) {
+    var userData = userRef.data();
+    const orderData = this.state.order.data();
+    if(orderData.status !== 0 || !(userData.role === 'manager' || userData.role === 'admin')) {
       return false;
     }
     return true;

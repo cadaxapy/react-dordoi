@@ -93,7 +93,7 @@ class NewOrder extends Component {
     var users = this.state.users;
     var userOptions = [];
     users.forEach(user => {
-      userOptions.push({value: user.id, label: user.data().phone});
+      userOptions.push({value: user.id, label: user.data().name});
     });
     return userOptions;
   }

@@ -26,7 +26,7 @@ class NewClient extends Component {
       city: null,
       name: null,
       validate: true,
-      lastName: null,
+      lastName: '',
       loading: true
     };
   };
@@ -71,7 +71,7 @@ class NewClient extends Component {
   }
   onSubmit(e) {
     e.preventDefault();
-    if(!this.state.name || !this.state.lastName || !this.state.currency || !this.state.phone || !this.state.city) {
+    if(!this.state.name || !this.state.currency || !this.state.phone || !this.state.city) {
       return this.setState({
         validate: false
       })

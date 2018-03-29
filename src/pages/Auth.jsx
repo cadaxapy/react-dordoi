@@ -36,7 +36,7 @@ class Auth extends Component {
       }
       var usersRef = db().collection('users');
       return usersRef.doc(user.uid).get().then(doc => {
-        if(!doc.exists) {
+        if(!doc.exists || !(doc.data().role === 'admin' || doc.data().role === 'manager')) {
           return this.setState({
             permission: false,
             loading: false
