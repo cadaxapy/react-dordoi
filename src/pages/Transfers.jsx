@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { db } from '../firebase.js';
+import getTime from '../helpers/time.js';
 import NewTransfer from './NewTransfer.jsx';
 import Spinner from '../components/Spinner.jsx'
 import { Alert, Table, PageHeader, Button } from 'react-bootstrap';
@@ -13,7 +14,7 @@ function GetTransfers({transfers}) {
         <td>{data.client.name}</td>
         <td>{data.user.name}</td>
         <td>{data.amount}</td>
-        <td>{data.createdAt ? data.createdAt.toString() : (new Date()).toString()}</td>
+        <td>{data.createdAt ? getTime(data.createdAt) : getTime(new Date())}</td>
       </tr>
     )
   }

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { MemoryRouter as Router, Route, Redirect } from 'react-router-dom';
+import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import NewOrder from './pages/NewOrder.jsx'
 import Order from './pages/Order.jsx';

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { db } from '../firebase.js';
 import Spinner from 'react-spinkit';
+import getTime from '../helpers/time.js';
 import { Card, CardText, CardBody, CardTitle, Button } from 'mdbreact';
 import OrderCard from '../components/OrderCard.jsx';
 import './Home.css';
@@ -27,7 +28,7 @@ class Home extends Component {
       this.setState({
         transfers: transfers,
         transfersAreLoading: false
-      })
+      });
     });
   }
   GetOrdersFromDb(lastOrderId) {
@@ -105,7 +106,7 @@ class Home extends Component {
                 Клиент: {data.client.name}<br/>
                 Переводчик: {data.user.name}<br/>
                 Сумма: {data.amount}<br/>
-                Создано: {data.createdAt.toString()}<br/>
+                Создано: {getTime(data.createdAt)}<br/>
               </CardText>
           </CardBody>
       </Card>);

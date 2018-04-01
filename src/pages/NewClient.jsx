@@ -21,7 +21,7 @@ class NewClient extends Component {
       phone: null,
       currentCurrency: null,
       currentCity: null,
-      currencies: null,
+      currencies: ['RUB', 'KZT', 'KGS', 'USD', 'TJS', 'UZS'],
       currency: null,
       city: null,
       name: null,
@@ -34,7 +34,7 @@ class NewClient extends Component {
     var currencies = this.state.currencies;
     var currencyOptions = [];
     currencies.forEach(currency => {
-      currencyOptions.push({value: currency.id, label: currency.data().name});
+      currencyOptions.push({value: currency, label: currency});
     })
     return currencyOptions;
   }
@@ -63,10 +63,7 @@ class NewClient extends Component {
   onCurrencySelect(e) {
     this.setState({
       currentCurrency: e.value,
-      currency: {
-        id: e.value,
-        name: e.label
-      }
+      currency: e.value
     })
   }
   onSubmit(e) {
@@ -76,6 +73,8 @@ class NewClient extends Component {
         validate: false
       })
     }
+    this.props.handleHide();
+    this.props.showAlert();
     db().collection('clients').add({
       name: this.state.name,
       lastName: this.state.lastName,
@@ -84,22 +83,16 @@ class NewClient extends Component {
       phone: this.state.phone,
       city: this.state.city,
       createdAt: db.FieldValue.serverTimestamp()
-    }).then(() => {
-      this.props.handleHide();
-      this.props.showAlert();
-    })
+    });
   }
   componentDidMount() {
-    Promise.all([
-      db().collection('cities').get(),
-      db().collection('currencies').get()
-    ]).then(([cities, currencies]) => {
+    db().collection('cities').get()
+    .then(cities => {
       this.setState({
         cities: cities,
-        currencies: currencies,
         loading: false
       });
-    })
+    });
   }
   render() {
     if(this.state.loading) {

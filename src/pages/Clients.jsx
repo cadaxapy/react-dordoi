@@ -14,7 +14,7 @@ function GetClients({clients, redirectToClient}) {
         <td>{data.lastName}</td>
         <td>{data.phone}</td>
         <td>{data.city.name}</td>
-        <td>{data.currency.name}</td>
+        <td>{data.currency}</td>
         <td>{data.budget}</td>
         <td><Button color="cyan" onClick={e => {redirectToClient(client.id)}}>Показать</Button></td>
       </tr>
