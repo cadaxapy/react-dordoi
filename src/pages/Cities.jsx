@@ -10,7 +10,6 @@ function GetCities({cities}) {
     cityList.push(
       <tr key={city.id}>
         <td>{data.name}</td>
-        <td>{data.id}</td>
       </tr>
     )
   })
@@ -19,7 +18,6 @@ function GetCities({cities}) {
       <thead>
         <tr>
           <th>Название</th>
-          <th>id</th>
         </tr>
       </thead>
       <tbody>

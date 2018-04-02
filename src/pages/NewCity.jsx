@@ -10,8 +10,7 @@ class NewCity extends Component {
     this.state = {
       validate: true,
       loading: true,
-      name: null,
-      id: null
+      name: null
     };
   };
   onChange(e) {
@@ -21,7 +20,7 @@ class NewCity extends Component {
   };
   onSubmit(e) {
     e.preventDefault();
-    if(!this.state.name || !this.state.id) {
+    if(!this.state.name) {
       return this.setState({
         validate: false
       })
@@ -29,8 +28,7 @@ class NewCity extends Component {
     this.props.handleHide();
     this.props.showAlert();
     db().collection('cities').add({
-      name: this.state.name,
-      id: this.state.id
+      name: this.state.name
     });
   }
   componentDidMount() {
@@ -45,11 +43,9 @@ class NewCity extends Component {
         >
           <ModalHeader toggle={this.props.handleHide}>Город</ModalHeader>
           <ModalBody>
-
             <form>
-              <p className="h3 text-center mb-4">Добавить</p>
-              <Input label="Название" onChange={this.onChange} name="name" group type="text" validate error="wrong" success="right"/>
-              <Input label="id" onChange={this.onChange} name="id" group type="text" validate error="wrong" success="right"/>
+              <p className="h4 text-center mb-4">Новый город</p>
+              <Input size='sm' label="Название" onChange={this.onChange} name="name" group type="text" validate error="wrong" success="right"/>
           </form>
           </ModalBody>
           <ModalFooter>
@@ -58,7 +54,7 @@ class NewCity extends Component {
               : ''
             }
             <Button onClick={this.props.handleHide}>Close</Button>
-            <Button onClick={this.onSubmit} type="submit" bsstyle="primary">Создать клиента</Button>
+            <Button onClick={this.onSubmit} type="submit" bsstyle="primary">Добавить город</Button>
           </ModalFooter>
         </Modal>
       </div>

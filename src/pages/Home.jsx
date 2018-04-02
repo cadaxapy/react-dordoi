@@ -104,7 +104,7 @@ class Home extends Component {
               <CardTitle>{transfer.id}</CardTitle>
               <CardText>
                 Клиент: {data.client.name}<br/>
-                Переводчик: {data.user.name}<br/>
+                Получатель: {data.user.name}<br/>
                 Сумма: {data.amount}<br/>
                 Создано: {getTime(data.createdAt)}<br/>
               </CardText>

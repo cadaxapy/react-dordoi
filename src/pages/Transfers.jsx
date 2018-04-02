@@ -23,7 +23,7 @@ function GetTransfers({transfers}) {
       <thead>
         <tr>
           <th>Клиент</th>
-          <th>Переводчик</th>
+          <th>Получатель</th>
           <th>Сумма(Сом)</th>
           <th>Время перевода</th>
         </tr>
